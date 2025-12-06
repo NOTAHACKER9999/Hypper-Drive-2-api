@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hypper-Drive-2 Launcher</title>
+<title>Hypper-Drive-2 API Launcher</title>
 <style>
   body {
     margin: 0;
@@ -11,8 +11,9 @@
     font-family: Arial, sans-serif;
     background: #121212;
     color: #fff;
+    text-align: center;
   }
-  h1, h2 { text-align: center; }
+  h1, h2 { margin: 10px 0; }
   .game-list, .type-list {
     display: flex;
     flex-wrap: wrap;
@@ -35,44 +36,34 @@
 </style>
 </head>
 <body>
-<h1>Hypper-Drive-2 Launcher</h1>
-<h2 id="subtitle">Loading...</h2>
+
+<h1>Welcome to Hypper Drive 2 API</h1>
+<h2 id="subtitle"></h2>
 <div id="content"></div>
 
 <script>
 async function router() {
-  // fetch the JSON remotely
+  // Fetch JSON from main Hypper-Drive-2 repo
   const zones = await fetch("https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json")
     .then(r => r.json())
     .catch(e => { document.body.innerHTML = "<h1>Error loading game data</h1>"; console.error(e); return []; });
 
   const content = document.getElementById("content");
   const subtitle = document.getElementById("subtitle");
-
   const parts = window.location.pathname.split("/").filter(Boolean);
 
-  // Home page → list types
+  // Home page → show welcome message only
   if (parts.length === 0 || (parts.length === 1 && parts[0] === "Games")) {
-    subtitle.textContent = "Select a game type:";
-    const types = [...new Set(zones.map(g => g.type))];
-    const container = document.createElement("div");
-    container.className = "type-list";
-    types.forEach(t => {
-      const div = document.createElement("div");
-      div.className = "game-item";
-      div.textContent = t;
-      div.onclick = () => window.location.href = `/Games/${t}`;
-      container.appendChild(div);
-    });
-    content.appendChild(container);
+    subtitle.textContent = "Select a game type by navigating to /Games/[type]";
     return;
   }
 
-  // /Games/[type] → list games
+  // /Games/[type] → list all games in that type
   if (parts.length === 2 && parts[0] === "Games") {
     const type = parts[1];
     const games = zones.filter(g => g.type === type);
     if (!games.length) { subtitle.textContent = "No games found in this type"; return; }
+
     subtitle.textContent = `Games in ${type}:`;
     const container = document.createElement("div");
     container.className = "game-list";
@@ -87,14 +78,14 @@ async function router() {
     return;
   }
 
-  // /Games/[type]/[name] → load iframe
+  // /Games/[type]/[name] → load the game iframe
   if (parts.length === 3 && parts[0] === "Games") {
     const type = parts[1];
     const name = decodeURIComponent(parts[2]);
     const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
     if (!game) { subtitle.textContent = "Game Not Found"; return; }
 
-    // favicon
+    // Set favicon to game cover
     const link = document.createElement("link");
     link.rel = "icon";
     link.href = game.cover;
