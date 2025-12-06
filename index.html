@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hypper-Drive-2 Launcher</title>
 </head>
 <body>
@@ -11,22 +10,24 @@ async function router() {
   const parts = window.location.pathname.split("/").filter(Boolean);
   const zonesUrl = "https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json";
 
-  // /Games → fetch JSON and display pure
+  // /Games → fetch and display pure JSON
   if (parts.length === 1 && parts[0] === "Games") {
     try {
       const jsonText = await fetch(zonesUrl).then(r => r.text());
-      // Replace page content with the pure JSON
+      // Replace entire page with pure JSON
       document.open();
       document.write(jsonText);
       document.close();
     } catch (err) {
-      document.body.innerHTML = '{"error":"Failed to fetch JSON"}';
+      document.open();
+      document.write('{"error":"Failed to fetch JSON"}');
+      document.close();
       console.error(err);
     }
     return;
   }
 
-  // /Games/[type]/[name] → fetch HTML and inject
+  // /Games/[type]/[name] → fetch game HTML and run full-screen
   if (parts.length === 3 && parts[0] === "Games") {
     const type = parts[1];
     const name = decodeURIComponent(parts[2]);
@@ -35,7 +36,9 @@ async function router() {
       const zones = await fetch(zonesUrl).then(r => r.json());
       const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
       if (!game) {
-        document.body.innerHTML = '{"error":"Game not found"}';
+        document.open();
+        document.write('{"error":"Game not found"}');
+        document.close();
         return;
       }
 
@@ -45,20 +48,24 @@ async function router() {
       link.href = game.cover;
       document.head.appendChild(link);
 
-      // Fetch and run game HTML
+      // Fetch HTML content and run full-screen
       const html = await fetch(game.url).then(r => r.text());
       document.open();
       document.write(html);
       document.close();
     } catch (err) {
-      document.body.innerHTML = '{"error":"Failed to load game"}';
+      document.open();
+      document.write('{"error":"Failed to load game"}');
+      document.close();
       console.error(err);
     }
     return;
   }
 
   // fallback 404
-  document.body.innerHTML = '{"error":"404 Not Found"}';
+  document.open();
+  document.write('{"error":"404 Not Found"}');
+  document.close();
 }
 
 router();
