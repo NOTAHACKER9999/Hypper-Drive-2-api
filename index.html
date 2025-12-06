@@ -10,11 +10,11 @@
 async function router() {
   const parts = window.location.pathname.split("/").filter(Boolean);
 
+  // /Games/[type]/[name] → fetch HTML content
   if (parts.length === 3 && parts[0] === "Games") {
     const type = parts[1];
     const name = decodeURIComponent(parts[2]);
 
-    // Fetch JSON from the API route
     const zones = await fetch("/api/games").then(r => r.json());
     const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
 
@@ -23,13 +23,13 @@ async function router() {
       return;
     }
 
-    // Set favicon
+    // Favicon
     const link = document.createElement("link");
     link.rel = "icon";
     link.href = game.cover;
     document.head.appendChild(link);
 
-    // Load HTML content
+    // Fetch HTML and run full-screen
     const html = await fetch(game.url).then(r => r.text());
     document.open();
     document.write(html);
@@ -37,7 +37,7 @@ async function router() {
     return;
   }
 
-  // 404 fallback
+  // Fallback 404
   document.body.innerHTML = "<h1>404 – Page Not Found</h1>";
 }
 
