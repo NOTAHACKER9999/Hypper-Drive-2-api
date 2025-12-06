@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hypper Drive 2 Games</title>
+<title>Hypper Drive 2 PC Games</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -31,18 +31,19 @@
 </style>
 </head>
 <body>
-<h1>Hypper Drive 2 Games</h1>
+<h1>PC Games on Hypper Drive 2</h1>
 <ul id="game-list"></ul>
 
 <script>
-const API_URL = "https://hypper-drive-2-api.vercel.app/Games.json"; // Dedicated JSON URL
+const API_URL = "https://hypper-drive-2-api.vercel.app/Games";
 
 async function loadGames() {
   try {
     const zones = await fetch(API_URL).then(r => r.json());
+    const pcGames = zones.filter(g => g.type === "PC");
     const ul = document.getElementById("game-list");
 
-    zones.forEach(game => {
+    pcGames.forEach(game => {
       const li = document.createElement("li");
 
       const img = document.createElement("img");
