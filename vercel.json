@@ -2,6 +2,7 @@
   "version": 2,
   "framework": null,
   "routes": [
+    { "src": "/Games.json", "dest": "/Games.json" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
