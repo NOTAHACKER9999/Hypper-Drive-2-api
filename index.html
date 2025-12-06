@@ -3,68 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hypper Drive 2 PC Games</title>
+<title>Hypper Drive 2 Zones.json</title>
 <style>
+  /* Minimal styling to mimic GitHub raw JSON */
   body {
-    font-family: Arial, sans-serif;
-    background: #121212;
-    color: #fff;
+    margin: 0;
     padding: 20px;
+    background: #fff; /* GitHub raw background */
+    color: #24292f;   /* GitHub text color */
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.4;
   }
-  h1 { text-align: center; }
-  ul { list-style: none; padding: 0; }
-  li {
-    margin: 10px 0;
-    padding: 10px;
-    background: #1e1e1e;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
+  pre {
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
   }
-  img {
-    width: 50px;
-    height: 50px;
-    object-fit: contain;
-    margin-right: 10px;
-  }
-  a { color: #1e90ff; text-decoration: none; }
 </style>
 </head>
 <body>
-<h1>PC Games on Hypper Drive 2</h1>
-<ul id="game-list"></ul>
+<pre id="json"></pre>
 
 <script>
-const API_URL = "https://hypper-drive-2-api.vercel.app/Games";
-
-async function loadGames() {
+async function showJSON() {
+  const zonesUrl = "https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json";
+  const pre = document.getElementById("json");
   try {
-    const zones = await fetch(API_URL).then(r => r.json());
-    const pcGames = zones.filter(g => g.type === "PC");
-    const ul = document.getElementById("game-list");
-
-    pcGames.forEach(game => {
-      const li = document.createElement("li");
-
-      const img = document.createElement("img");
-      img.src = game.cover;
-      img.alt = game.name;
-
-      const link = document.createElement("a");
-      link.href = `/Games/${game.type}/${encodeURIComponent(game.name)}`;
-      link.textContent = game.name;
-
-      li.appendChild(img);
-      li.appendChild(link);
-      ul.appendChild(li);
-    });
+    const zones = await fetch(zonesUrl).then(r => r.json());
+    pre.textContent = JSON.stringify(zones, null, 2);
   } catch (err) {
-    document.body.innerHTML = "<h1>Failed to load games</h1>";
+    pre.textContent = '{"error": "Failed to load JSON"}';
     console.error(err);
   }
 }
 
-loadGames();
+const parts = window.location.pathname.split("/").filter(Boolean);
+
+// Only show JSON on /Games
+if (parts.length === 1 && parts[0] === "Games") {
+  showJSON();
+} else if (parts.length === 3 && parts[0] === "Games") {
+  // /Games/[type]/[name] → full-screen game
+  const type = parts[1];
+  const name = decodeURIComponent(parts[2]);
+  const zonesUrl = "https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json";
+
+  fetch(zonesUrl).then(r => r.json()).then(zones => {
+    const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
+    if (!game) {
+      document.body.innerHTML = "<h1>Game not found</h1>";
+      return;
+    }
+
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.href = game.cover;
+    document.head.appendChild(link);
+
+    fetch(game.url).then(r => r.text()).then(html => {
+      document.open();
+      document.write(html);
+      document.close();
+    });
+  }).catch(err => {
+    document.body.innerHTML = "<h1>Failed to load game</h1>";
+    console.error(err);
+  });
+} else {
+  document.body.innerHTML = "<h1>404 – Not Found</h1>";
+}
 </script>
 </body>
 </html>
