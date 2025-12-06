@@ -2,73 +2,77 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Hypper-Drive-2 Launcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypper Drive 2 Zones.json</title>
+<style>
+  /* Minimal styling to mimic GitHub raw JSON */
+  body {
+    margin: 0;
+    padding: 20px;
+    background: #fff; /* GitHub raw background */
+    color: #24292f;   /* GitHub text color */
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  pre {
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+  }
+</style>
 </head>
 <body>
+<pre id="json"></pre>
+
 <script>
-async function router() {
-  const parts = window.location.pathname.split("/").filter(Boolean);
+async function showJSON() {
+  const zonesUrl = "https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json";
+  const pre = document.getElementById("json");
+  try {
+    const zones = await fetch(zonesUrl).then(r => r.json());
+    pre.textContent = JSON.stringify(zones, null, 2);
+  } catch (err) {
+    pre.textContent = '{"error": "Failed to load JSON"}';
+    console.error(err);
+  }
+}
+
+const parts = window.location.pathname.split("/").filter(Boolean);
+
+// Only show JSON on /Games
+if (parts.length === 1 && parts[0] === "Games") {
+  showJSON();
+} else if (parts.length === 3 && parts[0] === "Games") {
+  // /Games/[type]/[name] → full-screen game
+  const type = parts[1];
+  const name = decodeURIComponent(parts[2]);
   const zonesUrl = "https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json";
 
-  // /Games → fetch and display pure JSON
-  if (parts.length === 1 && parts[0] === "Games") {
-    try {
-      const jsonText = await fetch(zonesUrl).then(r => r.text());
-      // Replace entire page with pure JSON
-      document.open();
-      document.write(jsonText);
-      document.close();
-    } catch (err) {
-      document.open();
-      document.write('{"error":"Failed to fetch JSON"}');
-      document.close();
-      console.error(err);
+  fetch(zonesUrl).then(r => r.json()).then(zones => {
+    const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
+    if (!game) {
+      document.body.innerHTML = "<h1>Game not found</h1>";
+      return;
     }
-    return;
-  }
 
-  // /Games/[type]/[name] → fetch game HTML and run full-screen
-  if (parts.length === 3 && parts[0] === "Games") {
-    const type = parts[1];
-    const name = decodeURIComponent(parts[2]);
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.href = game.cover;
+    document.head.appendChild(link);
 
-    try {
-      const zones = await fetch(zonesUrl).then(r => r.json());
-      const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
-      if (!game) {
-        document.open();
-        document.write('{"error":"Game not found"}');
-        document.close();
-        return;
-      }
-
-      // Set favicon
-      const link = document.createElement("link");
-      link.rel = "icon";
-      link.href = game.cover;
-      document.head.appendChild(link);
-
-      // Fetch HTML content and run full-screen
-      const html = await fetch(game.url).then(r => r.text());
+    fetch(game.url).then(r => r.text()).then(html => {
       document.open();
       document.write(html);
       document.close();
-    } catch (err) {
-      document.open();
-      document.write('{"error":"Failed to load game"}');
-      document.close();
-      console.error(err);
-    }
-    return;
-  }
-
-  // fallback 404
-  document.open();
-  document.write('{"error":"404 Not Found"}');
-  document.close();
+    });
+  }).catch(err => {
+    document.body.innerHTML = "<h1>Failed to load game</h1>";
+    console.error(err);
+  });
+} else {
+  document.body.innerHTML = "<h1>404 – Not Found</h1>";
 }
-
-router();
 </script>
 </body>
 </html>
