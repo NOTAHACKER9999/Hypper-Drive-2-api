@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hypper-Drive-2 Launcher</title>
+<title>Hypper-Drive-2 API Launcher</title>
 <style>
   body, html {
     margin: 0;
-    padding: 0;
+    padding: 20px;
     font-family: Arial, sans-serif;
     background: #121212;
     color: #fff;
@@ -15,24 +15,6 @@
     height: 100%;
   }
   h1, h2 { text-align: center; margin: 10px 0; }
-  .game-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  .game-item {
-    background: #1e1e1e;
-    border-radius: 12px;
-    padding: 10px;
-    margin: 10px;
-    width: 180px;
-    text-align: center;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  .game-item:hover { transform: scale(1.05); }
-  .game-item img { width: 100%; border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -42,52 +24,30 @@
 
 <script>
 async function router() {
-  const zones = await fetch("https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json")
-    .then(r => r.json())
-    .catch(e => { document.body.innerHTML = "<h1>Error loading JSON</h1>"; console.error(e); return []; });
-
+  const zonesUrl = "https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json";
   const content = document.getElementById("content");
   const subtitle = document.getElementById("subtitle");
   const parts = window.location.pathname.split("/").filter(Boolean);
 
-  // / → Welcome message
+  // / → welcome page
   if (parts.length === 0) {
-    subtitle.textContent = "Navigate to /Games to see all games";
+    subtitle.textContent = "Navigate to /Games to access the Zones JSON";
     return;
   }
 
-  // /Games → list all games from JSON
+  // /Games → serve raw JSON for other JS to fetch
   if (parts.length === 1 && parts[0] === "Games") {
-    subtitle.textContent = "All games:";
-    const container = document.createElement("div");
-    container.className = "game-list";
-    zones.forEach(g => {
-      const div = document.createElement("div");
-      div.className = "game-item";
-      div.innerHTML = `<img src="${g.cover}" alt="${g.name}"><br>${g.type} — ${g.name}`;
-      div.onclick = () => window.location.href = `/Games/${g.type}/${encodeURIComponent(g.name)}`;
-      container.appendChild(div);
-    });
-    content.appendChild(container);
-    return;
-  }
-
-  // /Games/[type] → filter by type
-  if (parts.length === 2 && parts[0] === "Games") {
-    const type = parts[1];
-    const games = zones.filter(g => g.type === type);
-    if (!games.length) { subtitle.textContent = "No games found"; return; }
-    subtitle.textContent = `Games in ${type}:`;
-    const container = document.createElement("div");
-    container.className = "game-list";
-    games.forEach(g => {
-      const div = document.createElement("div");
-      div.className = "game-item";
-      div.innerHTML = `<img src="${g.cover}" alt="${g.name}"><br>${g.name}`;
-      div.onclick = () => window.location.href = `/Games/${type}/${encodeURIComponent(g.name)}`;
-      container.appendChild(div);
-    });
-    content.appendChild(container);
+    subtitle.textContent = "Raw JSON available for scripts:";
+    try {
+      const jsonText = await fetch(zonesUrl).then(r => r.text());
+      // Display raw JSON in a pre tag
+      const pre = document.createElement("pre");
+      pre.textContent = jsonText;
+      content.appendChild(pre);
+    } catch (err) {
+      subtitle.textContent = "Failed to fetch JSON";
+      console.error(err);
+    }
     return;
   }
 
@@ -95,8 +55,15 @@ async function router() {
   if (parts.length === 3 && parts[0] === "Games") {
     const type = parts[1];
     const name = decodeURIComponent(parts[2]);
+
+    // Fetch JSON to find the game
+    const zones = await fetch(zonesUrl).then(r => r.json());
     const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
-    if (!game) { subtitle.textContent = "Game not found"; return; }
+
+    if (!game) {
+      subtitle.textContent = "Game not found";
+      return;
+    }
 
     subtitle.textContent = game.name;
 
@@ -106,7 +73,7 @@ async function router() {
     link.href = game.cover;
     document.head.appendChild(link);
 
-    // Fetch game HTML and inject
+    // Fetch and inject the game HTML
     try {
       const html = await fetch(game.url).then(r => r.text());
       document.open();
