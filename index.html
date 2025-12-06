@@ -3,69 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hypper-Drive-2 API Launcher</title>
-<style>
-  body, html {
-    margin: 0;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    background: #121212;
-    color: #fff;
-    width: 100%;
-    height: 100%;
-  }
-  h1, h2 { text-align: center; margin: 10px 0; }
-</style>
+<title>Hypper-Drive-2 Launcher</title>
 </head>
 <body>
-<h1>Welcome to Hypper Drive 2 API</h1>
-<h2 id="subtitle">Loading...</h2>
-<div id="content"></div>
-
 <script>
 async function router() {
-  const zonesUrl = "https://raw.githubusercontent.com/GLITCHED-OVERRIDE/Hypper-Drive-2/refs/heads/main/Games/Zones.json";
-  const content = document.getElementById("content");
-  const subtitle = document.getElementById("subtitle");
   const parts = window.location.pathname.split("/").filter(Boolean);
 
-  // / → welcome page
-  if (parts.length === 0) {
-    subtitle.textContent = "Navigate to /Games to access the Zones JSON";
-    return;
-  }
-
-  // /Games → serve raw JSON for other JS to fetch
-  if (parts.length === 1 && parts[0] === "Games") {
-    subtitle.textContent = "Raw JSON available for scripts:";
-    try {
-      const jsonText = await fetch(zonesUrl).then(r => r.text());
-      // Display raw JSON in a pre tag
-      const pre = document.createElement("pre");
-      pre.textContent = jsonText;
-      content.appendChild(pre);
-    } catch (err) {
-      subtitle.textContent = "Failed to fetch JSON";
-      console.error(err);
-    }
-    return;
-  }
-
-  // /Games/[type]/[name] → fetch HTML and inject
   if (parts.length === 3 && parts[0] === "Games") {
     const type = parts[1];
     const name = decodeURIComponent(parts[2]);
 
-    // Fetch JSON to find the game
-    const zones = await fetch(zonesUrl).then(r => r.json());
+    // Fetch JSON from the API route
+    const zones = await fetch("/api/games").then(r => r.json());
     const game = zones.find(g => g.type === type && g.name.toLowerCase() === name.toLowerCase());
 
     if (!game) {
-      subtitle.textContent = "Game not found";
+      document.body.innerHTML = "<h1>Game not found</h1>";
       return;
     }
-
-    subtitle.textContent = game.name;
 
     // Set favicon
     const link = document.createElement("link");
@@ -73,21 +29,16 @@ async function router() {
     link.href = game.cover;
     document.head.appendChild(link);
 
-    // Fetch and inject the game HTML
-    try {
-      const html = await fetch(game.url).then(r => r.text());
-      document.open();
-      document.write(html);
-      document.close();
-    } catch (err) {
-      subtitle.textContent = "Failed to load game HTML";
-      console.error(err);
-    }
+    // Load HTML content
+    const html = await fetch(game.url).then(r => r.text());
+    document.open();
+    document.write(html);
+    document.close();
     return;
   }
 
   // 404 fallback
-  subtitle.textContent = "404 – Page Not Found";
+  document.body.innerHTML = "<h1>404 – Page Not Found</h1>";
 }
 
 router();
