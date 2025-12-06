@@ -2,7 +2,6 @@
   "version": 2,
   "framework": null,
   "routes": [
-    { "src": "/api/games", "dest": "/api/games.js" },
-    { "src": "/Games/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
