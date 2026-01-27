@@ -28,8 +28,17 @@
 
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/index.html",
       "destination": "/index.html"
     }
+  ],
+
+  "routes": [
+    // Ensure /sw.js and /file.zip are served as static files
+    { "src": "/Glitched.sw.js", "headers": { "Cache-Control": "no-cache" }, "dest": "/sw.js" }
   ]
 }
