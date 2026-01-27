@@ -30,14 +30,7 @@
     {
       "source": "/",
       "destination": "/index.html"
-    },
-    {
-      "source": "/index.html",
-      "destination": "/index.html"
     }
-  ],
-
-  "routes": [
-    { "src": "/Glitched.sw.js", "headers": { "Cache-Control": "no-cache" }, "dest": "/sw.js" }
   ]
 }
+
